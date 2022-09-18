@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cauculadora Basica</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css">
+    <style type="text/css">
+        button {
+            padding: 0;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <h1 style="text-align:center;">Operações aritiméricas</h1>
+            <h4>OBS: Escolha os numeros primeiro e depois a operação (+, -, /, *) para conseguir o resultado desejado</h4>
+
+        </div>
+        <div class="row">
+            <div class="form-group col-3">
+                <input class="form-group text-center" id="operando1" type="number">
+
+            </div>
+            <div class="form-group col-3">
+                <input class="form-group text-center" id="simbolo" disabled>
+
+            </div>
+            <div class="form-group col-3">
+                <input class="form-group text-center" id="operando2" type="number">
+
+            </div>
+            <div class="form-group col-3">
+                <input class="form-group text-center" id="resultado" type="number" disabled>
+
+            </div>
+        </div>
+
+        <div class="row">
+            <button type="button" class="btn btn-primary col-3" onclick="somar()" id="somar">+</button>
+            <button type="button" class="btn btn-secondary col-3" onclick="subtracao()" id="subtrair">-</button>
+            <button type="button" class="btn btn-primary col-3" onclick="divisao()" id="dividir">/</button>
+            <button type="button" class="btn btn-secondary col-3" onclick="multiplicacao()" id="multiplicar">*</button>
+
+        </div>
+    </div>
+</body>
+
+
+
+
+<script src="javascript/script.js"></script>
+
+</html>
