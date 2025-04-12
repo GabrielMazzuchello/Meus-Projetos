@@ -76,10 +76,8 @@ def automation_cycle():
             (time.sleep, [1]),
             (pydirectinput.press, ["s"]),
             (pydirectinput.press, ["space"]),
-            # Verificação de imagem antes do clique
             (check_image_and_wait, []),
-            # Prossegue com o clique somente se a verificação retornar sem encontrar a imagem
-            (pydirectinput.click, [1270, 583]),
+            (lambda: (pydirectinput.moveTo(1270, 583), pydirectinput.click()), []),
             (pydirectinput.press, ["s"]),
             (pydirectinput.keyDown, ["d"]),
             (time.sleep, [1]),
