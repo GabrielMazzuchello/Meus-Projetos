@@ -1,12 +1,14 @@
 import time
-import pydirectinput
 import winsound
 import pyautogui
+import pydirectinput
 import tkinter as tk
-from threading import Thread, Event
 from tkinter import messagebox
+from threading import Thread, Event
 
-DELAY_BETWEEN_ACTIONS = 1.8
+# pyinstaller --onefile --noconsole --icon=eclipse.ico main.py
+
+DELAY_BETWEEN_ACTIONS = 1.6
 stop_event = Event()
 timer_after_id = None
 
@@ -29,32 +31,27 @@ def wait_with_countdown(total_seconds, is_image_check=False):
     timer_label.config(text="")
 
 def check_image_and_wait():
-    """
-    Antes do clique, verifica se a imagem 'unavailable.png' está presente na tela.
-    Se estiver, pressiona 'backspace', aguarda 1 minuto com contagem e aciona as teclas 'space', 's' e 'space',
-    com delays entre as ações. O processo se repete enquanto a imagem for encontrada.
-    """
+    """Verifica continuamente a imagem até que não seja mais encontrada."""
     while not stop_event.is_set():
-        # Pequena pausa para garantir atualização da tela
-        time.sleep(0.5)
         try:
             pos = pyautogui.locateOnScreen('unavailable.png', confidence=0.8)
             if pos:
-                log("Imagem encontrada! Pressionando Backspace e aguardando 1 minuto...")
-                # Usa o action_wrapper para inserir o delay configurado
+                log("Material indisponível. Aguardando...")
                 action_wrapper(pydirectinput.press, ["backspace"])
-                # Aguarda 60 segundos com contagem regressiva
                 wait_with_countdown(60, is_image_check=True)
-                # Executa os demais comandos com o mesmo delay entre eles
                 action_wrapper(pydirectinput.press, ["space"])
                 action_wrapper(pydirectinput.press, ["s"])
                 action_wrapper(pydirectinput.press, ["space"])
             else:
-                log("Imagem indisponível não encontrada - prosseguindo com o clique.")
-                break  # Se a imagem não está presente, sai do loop
+                log("Material disponível - prosseguindo.")
+                return True
+        except pyautogui.ImageNotFoundException:
+            log("Imagem não encontrada - continuando.")
+            return True
         except Exception as e:
-            log(f"Erro durante verificação de imagem: {str(e)}")
-            break
+            log(f"Erro na verificação: {str(e)}")
+            return False
+        time.sleep(5)
 
 def action_wrapper(action, args=None):
     args = args or []
@@ -62,50 +59,56 @@ def action_wrapper(action, args=None):
     time.sleep(DELAY_BETWEEN_ACTIONS)
 
 def automation_cycle():
-    try:
-        log('Iniciando ciclo de automação...')
-        # Removemos a chamada de check_collect_button() para não executar ação indesejada no início
+    """Loop principal de automação usando apenas teclado"""
+    while not stop_event.is_set():
+        try:
+            log('Iniciando novo ciclo...')
+            
+            # Lista de ações atualizada sem clique do mouse
+            steps = [
+                (pydirectinput.press, ["space"]),
+                (pydirectinput.press, ["d"]),
+                (pydirectinput.press, ["d"]),
+                (pydirectinput.press, ["space"]),
+                (pydirectinput.press, ["s"]),
+                (pydirectinput.press, ["space"]),
+                (time.sleep, [1]),
+                (pydirectinput.press, ["s"]),
+                (pydirectinput.press, ["space"]),
+                (check_image_and_wait, []),
+                # Substituição do clique por comandos de teclado
+                (pydirectinput.press, ["d"]),
+                (pydirectinput.press, ["s"]),
+                (pydirectinput.press, ["s"]),
+                (pydirectinput.press, ["space"]),
+                (pydirectinput.press, ["s"]),
+                (pydirectinput.keyDown, ["d"]),
+                (time.sleep, [1]),
+                (pydirectinput.keyUp, ["d"]),
+                (pydirectinput.press, ["s"]),
+                (pydirectinput.press, ["space"]),
+                (pydirectinput.press, ["backspace"]),
+                (pydirectinput.press, ["backspace"]),
+                (pydirectinput.press, ["backspace"]),
+            ]
 
-        steps = [
-            (pydirectinput.press, ["space"]),
-            (pydirectinput.press, ["d"]),
-            (pydirectinput.press, ["d"]),
-            (pydirectinput.press, ["space"]),
-            (pydirectinput.press, ["s"]),
-            (pydirectinput.press, ["space"]),
-            (time.sleep, [1]),
-            (pydirectinput.press, ["s"]),
-            (pydirectinput.press, ["space"]),
-            (check_image_and_wait, []),
-            (lambda: (pydirectinput.moveTo(1270, 583), pydirectinput.click()), []),
-            (pydirectinput.press, ["s"]),
-            (pydirectinput.keyDown, ["d"]),
-            (time.sleep, [1]),
-            (pydirectinput.keyUp, ["d"]),
-            (pydirectinput.press, ["s"]),
-            (pydirectinput.press, ["space"]),
-            (pydirectinput.press, ["backspace"]),
-            (pydirectinput.press, ["backspace"]),
-            (pydirectinput.press, ["backspace"]),
-        ]
+            for action, args in steps:
+                if stop_event.is_set():
+                    return
+                if callable(action):
+                    if args:
+                        action(*args)
+                    else:
+                        action()
+                    time.sleep(DELAY_BETWEEN_ACTIONS)
 
-        for action, args in steps:
-            if stop_event.is_set():
-                break
-            action_wrapper(action, args)
+            log('Ciclo completo. Aguardando 30 minutos...')
+            wait_with_countdown(1800)
 
-        if not stop_event.is_set():
-            log('Ciclo completo - Aguardando próximo...')
-            wait_with_countdown(1900)
-
-    except Exception as e:
-        messagebox.showerror("Erro", str(e))
-    finally:
-        if not stop_event.is_set():
-            automation_cycle()
-        else:
-            stop_event.clear()
-            log("Automação finalizada!")
+        except Exception as e:
+            log(f"Erro crítico: {str(e)}")
+            messagebox.showerror("Erro", str(e))
+            stop_automation()
 
 # --- Controle da automação ---
 def start_automation():
